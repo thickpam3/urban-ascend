@@ -1,131 +1,153 @@
-// -------------------- Global Game Data --------------------
-const MAX_SAVES = 10;
-let saves = JSON.parse(localStorage.getItem("urbanSaves") || "[]");
-let currentCity = null;
-let gameStats = { population: 0, money: 0, happiness: 100 };
+const app = document.getElementById("app");
 
-// -------------------- DOM Elements --------------------
-const screens = {
-  main: document.getElementById("main-menu"),
-  settings: document.getElementById("settings-menu"),
-  save: document.getElementById("save-menu"),
-  game: document.getElementById("game-screen"),
-};
-const playBtn = document.getElementById("play-btn");
-const settingsBtn = document.getElementById("settings-btn");
-const settingsBackBtn = document.getElementById("settings-back-btn");
-const saveBackBtn = document.getElementById("save-back-btn");
-const darkToggle = document.getElementById("dark-mode-toggle");
-const saveList = document.getElementById("save-list");
-const cityNameDisplay = document.getElementById("city-name-display");
-const returnMainBtn = document.getElementById("return-main-btn");
+let saves = JSON.parse(localStorage.getItem("saves") || "[]");
 
-// -------------------- Screen Switching --------------------
-function showScreen(name) {
-  for (let key in screens) screens[key].classList.add("hidden");
-  screens[name].classList.remove("hidden");
+// ---------- UI Setup ----------
+function showMainMenu() {
+  app.innerHTML = `
+    <h1>Urban Ascend</h1>
+    <button id="play">Play</button>
+    <button id="settings">Settings</button>
+  `;
+
+  document.getElementById("play").onclick = showSaveMenu;
+  document.getElementById("settings").onclick = showSettings;
 }
 
-// -------------------- Settings --------------------
-darkToggle.addEventListener("change", () => {
-  document.body.classList.toggle("dark", darkToggle.checked);
-  localStorage.setItem("darkMode", darkToggle.checked);
-});
+function showSettings() {
+  app.innerHTML = `
+    <h1>Settings</h1>
+    <label>
+      Dark Mode
+      <input type="checkbox" id="dark-toggle">
+    </label>
+    <label>
+      Show Tips
+      <input type="checkbox" id="show-tips-toggle">
+    </label>
+    <label>
+      Confirm Deletes
+      <input type="checkbox" id="confirm-deletes-toggle">
+    </label>
+    <button id="back">Back</button>
+  `;
 
-document.addEventListener("DOMContentLoaded", () => {
+  const darkToggle = document.getElementById("dark-toggle");
+
+  // --- Load saved settings or set defaults ---
   const dark = localStorage.getItem("darkMode") === "true";
+  const showTips = localStorage.getItem("showTips");
+  const confirmDeletes = localStorage.getItem("confirmDeletes");
+
   darkToggle.checked = dark;
   document.body.classList.toggle("dark", dark);
-});
 
-// -------------------- Save System --------------------
-function renderSaves() {
-  saveList.innerHTML = "";
-  for (let i = 0; i < MAX_SAVES; i++) {
-    const save = saves[i];
+  document.getElementById("show-tips-toggle").checked = showTips !== "false";
+  document.getElementById("confirm-deletes-toggle").checked = confirmDeletes !== "false";
+
+  // --- Handle setting changes ---
+  darkToggle.onchange = e => {
+    localStorage.setItem("darkMode", e.target.checked);
+    document.body.classList.toggle("dark", e.target.checked);
+  };
+
+  document.getElementById("show-tips-toggle").onchange = e => {
+    localStorage.setItem("showTips", e.target.checked);
+  };
+  document.getElementById("confirm-deletes-toggle").onchange = e => {
+    localStorage.setItem("confirmDeletes", e.target.checked);
+  };
+
+  document.getElementById("back").onclick = showMainMenu;
+}
+
+function showSaveMenu() {
+  app.innerHTML = `
+    <h1>Your Cities</h1>
+    <div id="save-list"></div>
+    <button id="back">Back</button>
+  `;
+
+  const list = document.getElementById("save-list");
+  list.innerHTML = "";
+
+  for (let i = 0; i < 10; i++) {
+    const slot = saves[i];
     const div = document.createElement("div");
     div.className = "save-slot";
 
-    if (save) {
+    if (slot) {
       div.innerHTML = `
-        <span>${save.name}</span>
-        <div>
-          <button onclick="loadCity(${i})">Play</button>
-          <button onclick="renameCity(${i})">Rename</button>
-          <button onclick="deleteCity(${i})">Delete</button>
-        </div>`;
+        <strong>${slot.name}</strong><br>
+        <button data-index="${i}" class="play">Play</button>
+        <button data-index="${i}" class="rename">Rename</button>
+        <button data-index="${i}" class="delete">Delete</button>
+      `;
     } else {
-      div.innerHTML = `<button onclick="newCity(${i})">Build New City</button>`;
+      div.innerHTML = `
+        <em>Empty Slot</em><br>
+        <button data-index="${i}" class="new">Build New City</button>
+      `;
     }
-    saveList.appendChild(div);
+
+    list.appendChild(div);
   }
+
+  list.onclick = e => {
+    const i = e.target.dataset.index;
+    if (e.target.classList.contains("play")) playGame(i);
+    if (e.target.classList.contains("rename")) renameSave(i);
+    if (e.target.classList.contains("delete")) deleteSave(i);
+    if (e.target.classList.contains("new")) createNewCity(i);
+  };
+
+  document.getElementById("back").onclick = showMainMenu;
 }
 
-function saveAll() {
-  localStorage.setItem("urbanSaves", JSON.stringify(saves));
-}
-
-function newCity(slot) {
-  const name = prompt("Enter your city name:");
+function createNewCity(i) {
+  const name = prompt("Enter your city's name:");
   if (!name) return;
-  saves[slot] = { name, stats: { population: 100, money: 1000, happiness: 100 } };
+  saves[i] = { name, population: 0, money: 1000 };
   saveAll();
-  renderSaves();
+  showSaveMenu();
 }
 
-function loadCity(slot) {
-  currentCity = slot;
-  gameStats = saves[slot].stats;
-  cityNameDisplay.textContent = saves[slot].name;
-  showScreen("game");
-}
-
-function renameCity(slot) {
-  const newName = prompt("Enter new name for your city:");
-  if (!newName) return;
-  saves[slot].name = newName;
-  saveAll();
-  renderSaves();
-}
-
-function deleteCity(slot) {
-  const confirmDelete = confirm("Are you sure you want to delete this city?");
-  if (!confirmDelete) return;
-  saves[slot] = null;
-  saveAll();
-  renderSaves();
-}
-
-// -------------------- Autosave --------------------
-setInterval(() => {
-  if (currentCity !== null) {
-    saves[currentCity].stats = gameStats;
+function renameSave(i) {
+  const name = prompt("Enter new city name:", saves[i].name);
+  if (name) {
+    saves[i].name = name;
     saveAll();
-  }
-}, 1000);
-
-// -------------------- Game Loop (placeholder) --------------------
-function gameTick() {
-  if (currentCity !== null) {
-    // Example idle income
-    gameStats.money += 1;
-    document.getElementById("stat-money").textContent = gameStats.money;
+    showSaveMenu();
   }
 }
-setInterval(gameTick, 1000);
 
-// -------------------- Event Listeners --------------------
-playBtn.onclick = () => {
-  renderSaves();
-  showScreen("save");
-};
-settingsBtn.onclick = () => showScreen("settings");
-settingsBackBtn.onclick = () => showScreen("main");
-saveBackBtn.onclick = () => showScreen("main");
-returnMainBtn.onclick = () => {
-  currentCity = null;
-  showScreen("main");
-};
+function deleteSave(i) {
+  const confirmDeletes = localStorage.getItem("confirmDeletes") !== "false";
+  if (confirmDeletes && !confirm("Delete this city?")) return;
+  saves[i] = null;
+  saveAll();
+  showSaveMenu();
+}
 
-// -------------------- Initialize --------------------
-showScreen("main");
+function playGame(i) {
+  const save = saves[i];
+  app.innerHTML = `
+    <h1>${save.name}</h1>
+    <p>Population: ${save.population}</p>
+    <p>Money: $${save.money}</p>
+    <button id="back">Main Menu</button>
+  `;
+
+  document.getElementById("back").onclick = showMainMenu;
+}
+
+// ---------- Save System ----------
+function saveAll() {
+  localStorage.setItem("saves", JSON.stringify(saves));
+}
+
+// ---------- Autosave ----------
+setInterval(saveAll, 1000);
+
+// ---------- Start Game ----------
+showMainMenu();

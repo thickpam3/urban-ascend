@@ -1,1 +1,73 @@
+:root {
+  --bg: #f0f0f0;
+  --text: #222;
+  --panel: #fff;
+  --button: #ddd;
+  --button-hover: #ccc;
+}
 
+body.dark {
+  --bg: #1a1a1a;
+  --text: #f8f8f8;
+  --panel: #222;
+  --button: #333;
+  --button-hover: #444;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.screen {
+  text-align: center;
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0002;
+  min-width: 300px;
+}
+
+.hidden {
+  display: none;
+}
+
+button {
+  background: var(--button);
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: var(--button-hover);
+}
+
+#save-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.save-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--button);
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.save-slot button {
+  margin: 0 3px;
+  padding: 5px 10px;
+}

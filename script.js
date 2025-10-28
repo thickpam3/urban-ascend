@@ -1,8 +1,8 @@
 const app = document.getElementById("app");
-
 let saves = JSON.parse(localStorage.getItem("saves") || "[]");
+let currentCity = null;
 
-// ---------- UI Setup ----------
+// ---------- UI Functions ----------
 function showMainMenu() {
   app.innerHTML = `
     <h1>Urban Ascend</h1>
@@ -34,7 +34,7 @@ function showSettings() {
 
   const darkToggle = document.getElementById("dark-toggle");
 
-  // --- Load saved settings or set defaults ---
+  // --- Load saved settings or defaults ---
   const dark = localStorage.getItem("darkMode") === "true";
   const showTips = localStorage.getItem("showTips");
   const confirmDeletes = localStorage.getItem("confirmDeletes");
@@ -45,12 +45,11 @@ function showSettings() {
   document.getElementById("show-tips-toggle").checked = showTips !== "false";
   document.getElementById("confirm-deletes-toggle").checked = confirmDeletes !== "false";
 
-  // --- Handle setting changes ---
+  // --- Event listeners ---
   darkToggle.onchange = e => {
     localStorage.setItem("darkMode", e.target.checked);
     document.body.classList.toggle("dark", e.target.checked);
   };
-
   document.getElementById("show-tips-toggle").onchange = e => {
     localStorage.setItem("showTips", e.target.checked);
   };
@@ -104,10 +103,11 @@ function showSaveMenu() {
   document.getElementById("back").onclick = showMainMenu;
 }
 
+// ---------- Save Functions ----------
 function createNewCity(i) {
   const name = prompt("Enter your city's name:");
   if (!name) return;
-  saves[i] = { name, population: 0, money: 1000 };
+  saves[i] = { name, population: 100, money: 1000 };
   saveAll();
   showSaveMenu();
 }
@@ -130,6 +130,7 @@ function deleteSave(i) {
 }
 
 function playGame(i) {
+  currentCity = i;
   const save = saves[i];
   app.innerHTML = `
     <h1>${save.name}</h1>
@@ -137,17 +138,18 @@ function playGame(i) {
     <p>Money: $${save.money}</p>
     <button id="back">Main Menu</button>
   `;
-
-  document.getElementById("back").onclick = showMainMenu;
-}
-
-// ---------- Save System ----------
-function saveAll() {
-  localStorage.setItem("saves", JSON.stringify(saves));
+  document.getElementById("back").onclick = () => { currentCity = null; showMainMenu(); };
 }
 
 // ---------- Autosave ----------
+function saveAll() {
+  if (currentCity !== null) {
+    saves[currentCity].population += 0; // placeholder for future stat updates
+    saves[currentCity].money += 0;
+  }
+  localStorage.setItem("saves", JSON.stringify(saves));
+}
 setInterval(saveAll, 1000);
 
-// ---------- Start Game ----------
+// ---------- Initialize ----------
 showMainMenu();

@@ -1,1 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Ascend</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="main-menu" class="screen">
+    <h1>Urban Ascend</h1>
+    <button id="play-btn">Play</button>
+    <button id="settings-btn">Settings</button>
+  </div>
 
+  <div id="settings-menu" class="screen hidden">
+    <h2>Settings</h2>
+    <label>
+      <input type="checkbox" id="dark-mode-toggle" /> Dark Mode
+    </label>
+    <label>
+      <input type="checkbox" id="show-tips-toggle" /> Show Tips
+    </label>
+    <label>
+      <input type="checkbox" id="confirm-deletes-toggle" /> Confirm Deletes
+    </label>
+    <button id="settings-back-btn">Back</button>
+  </div>
+
+  <div id="save-menu" class="screen hidden">
+    <h2>Your Cities</h2>
+    <div id="save-list"></div>
+    <button id="save-back-btn">Back</button>
+  </div>
+
+  <div id="game-screen" class="screen hidden">
+    <h2 id="city-name-display"></h2>
+    <p>Population: <span id="stat-pop">0</span></p>
+    <p>Money: <span id="stat-money">0</span></p>
+    <p>Happiness: <span id="stat-happy">100%</span></p>
+    <button id="return-main-btn">Main Menu</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
